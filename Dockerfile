@@ -23,4 +23,4 @@ RUN usermod -aG docker jenkins
 # Dar permisos al usuario jenkins
 RUN chown -R jenkins:jenkins /var/jenkins_home
 
-USER jenkins
+USER root

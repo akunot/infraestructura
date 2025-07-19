@@ -15,10 +15,12 @@ pipeline {
         stage('Copiar archivo env_json') {
             steps {
                 sh '''
-                    cp "$FIREBASE_ENV" Flask/Flask_microservice/.env_json
+                    chmod -R u+w Flask/Flask_microservice
+                    cp "$FIREBASE_ENV" Flask/Flask_microservice/
                 '''
             }
         }
+
 
         stage('Construir contenedores') {
             steps {
