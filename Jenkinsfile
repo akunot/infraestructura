@@ -2,67 +2,59 @@ pipeline {
     agent any
 
     environment {
-        COMPOSER_ALLOW_SUPERUSER = '1'
+        FIREBASE_ENV = credentials('firebase-env-json')
     }
 
     stages {
-        stage('Clonar repositorio') {
+        stage('Clonar proyecto principal') {
             steps {
-                git url: 'repo' , branch: 'main'
+                git url: 'https://github.com/akunot/proyecto-test.git', branch: 'main'
             }
         }
 
-        stage('Instalar dependencias PHP') {
+        stage('Copiar archivo env_json') {
             steps {
-                dir('backend') {
-                    sh '''
-                        echo "Instalando dependencias de PHP..."
-                        composer install
-                    '''
-                }
+                sh '''
+                    cp "$FIREBASE_ENV" Flask/Flask_microservice/.env_json
+                '''
             }
         }
 
-        stage('Generar APP_KEY') {
+        stage('Construir contenedores') {
             steps {
-                dir('backend') {
-                    sh '''
-                        if [ ! -f .env ]; then
-                            echo "Generando archivo .env..."
-                            cp .env.example .env
-                        fi
+                sh 'docker-compose build'
+            }
+        }
 
-                        php artisan key:generate
-                    '''
-                }
+        stage('Levantar servicios') {
+            steps {
+                sh 'docker-compose up -d'
+            }
+        }
+
+        stage('Instalar dependencias') {
+            steps {
+                sh '''
+                docker-compose exec gateway composer install
+                docker-compose exec email composer install
+                docker-compose exec flask pip install -r requirements.txt
+                '''
             }
         }
 
         stage('Ejecutar pruebas') {
             steps {
-                dir('backend') {
-                    sh '''
-                        echo "Ejecutando pruebas..."
-                        php artisan test
-                    '''
-                }
-            }
-        }
-
-        stage('Verificar versiones') {
-            steps {
                 sh '''
-                    echo "PHP:"
-                    php -v
-
-                    echo "Composer:"
-                    composer -V
-
-                    echo "Node.js:"
-                    node -v
-                    npm -v
+                docker-compose exec gateway php artisan test
+                docker-compose exec email php artisan test
                 '''
             }
+        }
+    }
+
+    post {
+        always {
+            sh 'docker-compose down'
         }
     }
 }
