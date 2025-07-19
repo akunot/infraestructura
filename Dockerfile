@@ -17,6 +17,9 @@ RUN curl -SL https://github.com/docker/compose/releases/download/v2.24.5/docker-
 RUN curl -sS https://getcomposer.org/installer | php && \
     mv composer.phar /usr/local/bin/composer
 
+# Agrega jenkins al grupo de Docker
+RUN usermod -aG docker jenkins
+
 # Dar permisos al usuario jenkins
 RUN chown -R jenkins:jenkins /var/jenkins_home
 
