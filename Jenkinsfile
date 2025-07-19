@@ -8,7 +8,7 @@ pipeline {
     stages {
         stage('Clonar proyecto principal') {
             steps {
-                git url: 'https://github.com/akunot/proyecto-test.git', branch: 'main'
+                git credentialsId: 'github-token', url: 'https://github.com/akunot/proyecto-test.git', branch: 'main'
             }
         }
 
